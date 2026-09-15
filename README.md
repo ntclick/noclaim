@@ -3,9 +3,9 @@
 **Track:** Prediction Markets & Real-World Settlement — Agent Tank hackathon
 (`https://portal.genlayer.foundation/agent-tank/hackathon`)
 
-**Demo:** <https://ntclick.github.io/noclaim/> — the landing page.
+**Demo:** <https://noclaim-i6xq.onrender.com/> — the landing page.
 The cover desk, where you buy, settle and collect, is at
-[`/noclaim.html`](https://ntclick.github.io/noclaim/noclaim.html).
+[`/noclaim.html`](https://noclaim-i6xq.onrender.com/).
 
 **Contract:** [`0xB21Bb12256e9EaEfa5Af906F73Ff7766b6b1cce7`](https://explorer-studio.genlayer.com/address/0xB21Bb12256e9EaEfa5Af906F73Ff7766b6b1cce7)
 on GenLayer StudioNet, chain 61999 — every policy ever written, and the
