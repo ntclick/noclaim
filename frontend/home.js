@@ -11,16 +11,16 @@
  * honestly blank.
  */
 import { createClient } from 'genlayer-js';
-import { studionet } from 'genlayer-js/chains';
+import { studioDevnet } from 'genlayer-js/chains';
 import { markSvg, faviconHref } from './brand.js';
 
-const RPC = 'https://studio.genlayer.com/api';
-const EXPLORER = 'https://explorer-studio.genlayer.com';
-const CONTRACT = '0xB21Bb12256e9EaEfa5Af906F73Ff7766b6b1cce7';
+const RPC = 'https://studio-next.genlayer.com/api';
+const EXPLORER = 'https://explorer-studio-dev.genlayer.com';
+const CONTRACT = '0x3544BDaE5c3297486F97DEa222250Df349c59f51';
 const ONE_GEN = 10n ** 18n;
 
 const $ = (id) => document.getElementById(id);
-const client = createClient({ chain: studionet, endpoint: RPC });
+const client = createClient({ chain: studioDevnet, endpoint: RPC });
 
 const shorten = (addr) => (addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : '-');
 

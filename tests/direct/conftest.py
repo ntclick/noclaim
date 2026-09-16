@@ -157,8 +157,13 @@ class MockEvm:
         return _EvmProxy
 
 
+class MockContractModule:
+    Contract = MockContract
+
+
 class MockGL:
     Contract = MockContract
+    contract = MockContractModule
     message = MockMessage()
     vm = MockVM()
     nondet = MockNondet()

@@ -12,12 +12,12 @@
  * what changed.
  */
 import { createClient } from 'genlayer-js';
-import { studionet } from 'genlayer-js/chains';
+import { studioDevnet } from 'genlayer-js/chains';
 import { TransactionStatus } from 'genlayer-js/types';
 
-export const RPC = 'https://studio.genlayer.com/api';
-export const EXPLORER = 'https://explorer-studio.genlayer.com';
-export const CHAIN_ID_HEX = '0xf22f'; // 61999
+export const RPC = 'https://studio-next.genlayer.com/api';
+export const EXPLORER = 'https://explorer-studio-dev.genlayer.com';
+export const CHAIN_ID_HEX = '0xf22d'; // 61997
 export const ONE_GEN = 10n ** 18n;
 
 const MODE_STORAGE = 'gl_signer_mode';
@@ -25,6 +25,7 @@ const MODE_STORAGE = 'gl_signer_mode';
 // Chains a wallet is likely to be sitting on, so a wrong one can be named
 // rather than shown as a bare hex id nobody reads.
 const KNOWN_CHAINS = {
+  '0xf22d': 'GenLayer Studio Next',
   '0xf22f': 'GenLayer StudioNet',
   '0x1': 'Ethereum mainnet',
   '0xaa36a7': 'Sepolia',
@@ -245,7 +246,7 @@ export async function ensureStudioChain() {
         method: 'wallet_addEthereumChain',
         params: [{
           chainId: CHAIN_ID_HEX,
-          chainName: 'GenLayer StudioNet',
+          chainName: 'GenLayer Studio Next',
           rpcUrls: [RPC],
           nativeCurrency: { name: 'GEN', symbol: 'GEN', decimals: 18 },
           blockExplorerUrls: [EXPLORER],
@@ -268,7 +269,7 @@ export async function ensureStudioChain() {
 
 export function chainLabel() {
   const id = signer.chainId;
-  if (id === CHAIN_ID_HEX) return { name: 'GenLayer StudioNet (61999)', ok: true };
+  if (id === CHAIN_ID_HEX) return { name: 'GenLayer Studio Next (61997)', ok: true };
   if (!id) return { name: 'Unknown', ok: false };
   return { name: `${KNOWN_CHAINS[id] || 'Unknown chain'} (${parseInt(id, 16)}) - wrong network`, ok: false };
 }
@@ -282,7 +283,7 @@ export const isSignedIn = () => signer.mode !== null;
 function attachWallet(address, provider) {
   signer.mode = 'wallet';
   signer.address = address;
-  signer.client = createClient({ chain: studionet, account: address, provider });
+  signer.client = createClient({ chain: studioDevnet, account: address, provider });
   localStorage.setItem(MODE_STORAGE, 'wallet');
 }
 
@@ -338,13 +339,13 @@ export async function connectWallet({ silent = false } = {}) {
     const ok = await ensureStudioChain();
     signer.chainId = await readChainId();
     if (!ok && !silent) {
-      toast('Connected, but your wallet is not on StudioNet - use Switch', 'error');
+      toast('Connected, but your wallet is not on Studio Next - use Switch', 'error');
     }
   }
 
   onChange();
   if (!silent && signer.chainId === CHAIN_ID_HEX) {
-    toast(`Connected ${shorten(accounts[0])} on StudioNet`, 'success');
+    toast(`Connected ${shorten(accounts[0])} on Studio Next`, 'success');
   }
   return true;
 }
@@ -363,7 +364,7 @@ export function signOut() {
  *  that need no permission: opening a page must never raise a prompt. */
 export async function initWallet({ onAuthChange = () => {} } = {}) {
   onChange = onAuthChange;
-  readClient = createClient({ chain: studionet, endpoint: RPC });
+  readClient = createClient({ chain: studioDevnet, endpoint: RPC });
 
   if (localStorage.getItem(MODE_STORAGE) === 'wallet') {
     // MetaMask can inject after this script runs, so give it a moment.
@@ -402,24 +403,45 @@ export function makeContract(address) {
       signer.chainId = await readChainId();
       onChange();
       if (!ok) {
-        throw new Error('Your wallet is not on GenLayer StudioNet (chain 61999). Switch network and try again.');
+        throw new Error('Your wallet is not on GenLayer Studio Next (chain 61997). Switch network and try again.');
       }
       let hash;
+      const fees = {
+        distribution: {
+          rotations: [0],
+          appealRounds: 0,
+          totalMessageFees: 0,
+          executionConsumed: 0,
+          receiptFeeMaxGasPrice: 300000000,
+          storageFeeMaxGasPrice: 300000000,
+          maxPriceGenPerTimeUnit: 2,
+          executionBudgetPerRound: 250000000000000n,
+          leaderTimeunitsAllocation: 100,
+          validatorTimeunitsAllocation: 200,
+        },
+        feeValue: 250000000002588n,
+      };
       try {
         hash = await enqueue(() =>
-          signer.client.writeContract({ address, functionName, args, value }));
+          signer.client.writeContract({ address, functionName, args, value, fees }));
       } catch (e) {
         // Writes have their own, much smaller budget. Say what actually
         // happened rather than letting a CORS-shaped error stand.
         if (looksRateLimited(e)) {
           noteRateLimit(30);
-          throw new Error('StudioNet is rate limiting transactions right now. Wait about half a minute and try again.');
+          throw new Error('Studio Next is rate limiting transactions right now. Wait about half a minute and try again.');
         }
         throw e;
       }
-      await signer.client.waitForTransactionReceipt({
-        hash, status: TransactionStatus.ACCEPTED, interval: 3000, retries: 60,
-      });
+      try {
+        await signer.client.waitForTransactionReceipt({
+          hash, waitUntil: 'finalized', interval: 3000, retries: 60,
+        });
+      } catch {
+        await signer.client.waitForTransactionReceipt({
+          hash, status: TransactionStatus.ACCEPTED, interval: 3000, retries: 60,
+        });
+      }
       // ACCEPTED does not mean a read will see it yet: reading straight after a
       // write returned pre-transaction state, so a success message appeared over
       // unchanged numbers. Waiting a beat removes that.

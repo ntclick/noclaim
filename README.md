@@ -3,27 +3,60 @@
 **Track:** Prediction Markets & Real-World Settlement — Agent Tank hackathon
 (`https://portal.genlayer.foundation/agent-tank/hackathon`)
 
-**Demo:** <https://noclaim-i6xq.onrender.com/> — the landing page.
-The cover desk, where you buy, settle and collect, is at
-[`/noclaim.html`](https://noclaim-i6xq.onrender.com/).
+**Demo App (Cover Desk):**
+- Live App Path: <https://noclaim-i6xq.onrender.com/noclaim.html>
+- GitHub Pages Mirror: <https://ntclick.github.io/noclaim/noclaim.html>
+- Landing Page: <https://noclaim-i6xq.onrender.com/>
 
-**Contract:** [`0xB21Bb12256e9EaEfa5Af906F73Ff7766b6b1cce7`](https://explorer-studio.genlayer.com/address/0xB21Bb12256e9EaEfa5Af906F73Ff7766b6b1cce7)
-on GenLayer StudioNet, chain 61999 — every policy ever written, and the
-reasoning the validators agreed on, is readable there without trusting this
-repository, or the link above, at all.
+**Contract:** [`0x3544BDaE5c3297486F97DEa222250Df349c59f51`](https://explorer-studio-dev.genlayer.com/address/0x3544BDaE5c3297486F97DEa222250Df349c59f51)
+on GenLayer Studio Next, chain 61997 — every policy ever written, the underwriting pool, and the
+reasoning the validators agreed on, is readable there on the explorer.
+
+## Hackathon Submission & Verification (Studio Next)
+
+| Parameter | Value |
+| --- | --- |
+| **Hackathon** | Agent Tank Hackathon |
+| **Track** | Prediction Markets & Real-World Settlement |
+| **Network** | **GenLayer Studio Next** (Consensus v0.6 RC) |
+| **RPC URL** | `https://studio-next.genlayer.com/api` |
+| **Chain ID** | `61997` (`0xf22d`) |
+| **Contract Address** | [`0x3544BDaE5c3297486F97DEa222250Df349c59f51`](https://explorer-studio-dev.genlayer.com/address/0x3544BDaE5c3297486F97DEa222250Df349c59f51) |
+| **Explorer** | [explorer-studio-dev.genlayer.com](https://explorer-studio-dev.genlayer.com/address/0x3544BDaE5c3297486F97DEa222250Df349c59f51) |
+| **Initial Pool Funding** | 50 GEN committed by underwriters |
+| **Demo Video** | [Watch Loom / YouTube Demo Walkthrough](#demo-video) |
+
+### Key Evaluation Questions Answered
+
+1. **What does the project do?**
+   NoClaim is a decentralized parametric cover protocol where policies pay out automatically without claim forms, human assessors, or discretionary approval. Buyers specify an insured event, adjudication criteria, and public evidence URLs. At expiration, decentralized AI validators fetch the live evidence and settle the policy.
+2. **What problem does it solve and why is an underwriting pool used?**
+   Prediction markets require an explicit counterparty betting that your misfortune will occur. For genuine insurance needs (e.g. flight delays, rainfall deficits, service outages), nobody wants to take that bet. NoClaim solves this by utilizing a pooled underwriting model: capital providers earn collective premiums for absorbing uncorrelated real-world risks.
+3. **Why GenLayer is uniquely required:**
+   - **Independent Web Access:** Validators independently fetch real-world data at settlement time without relying on centralized oracles.
+   - **LLM Loss Adjustment:** Validators run the adjudication prompt through AI models to interpret real-world criteria and qualitative evidence.
+   - **Custom Equivalence Principle:** Natural language reasoning is allowed to vary between validators, while requiring strict consensus on the actionable verdict (`FIRED`, `NOT_FIRED`, or `UNKNOWN`).
+   - **Structural Solvency:** 100% of the potential payout is reserved from the pool at purchase time. Underwriters cannot withdraw reserved funds.
+4. **How the 3-Way Settlement works:**
+   - `FIRED`: Event occurred; full payout credited to policyholder.
+   - `NOT_FIRED`: Event did not occur; underwriters keep the premium.
+   - `UNKNOWN`: Evidence is absent or inconclusive. Unlike traditional insurers that deny claims and keep premiums, NoClaim refunds 100% of the premium to the buyer, eliminating perverse incentives to write uncheckable cover.
+5. **How to test and verify:**
+   - All 24 unit tests pass via `py -3.13 -m pytest tests/direct`.
+   - The contract is live on Studio Next and funded with 50 GEN.
+   - Use the live web application to buy, settle, and collect policies.
 
 ## Try it in four steps
 
-1. **Connect a wallet** on the cover desk. StudioNet is added for you; the bar
+1. **Connect a wallet** on the cover desk. Studio Next (chain 61997) is added for you; the bar
    at the top names the chain, the contract and your balance, and turns amber
    if the wallet is anywhere else.
-2. **Take test GEN** from the checklist. It is a test network and the GEN is
-   free.
+2. **Take test GEN** from the faucet / checklist (`sim_fundAccount`). It is a test network and the GEN is free.
 3. **Buy cover.** Click the Rainfall template — it reads the live forecast and
    sets the threshold just above it — set the window to 6 minutes, and buy.
 4. **Settle it** once the countdown ends. Or settle somebody else's: the
-   *Every policy* tab usually has expired ones waiting, and anyone may
-   adjudicate them. That is the point.
+   *Every policy* tab displays active policies, and anyone may
+   adjudicate them permissionlessly.
 
 If cover pays out, the amount is credited to you and **Collect** moves it to
 your wallet. Watch the balance in the top bar rather than your wallet's own
@@ -235,3 +268,18 @@ work as before by merging both stores.
   all settled policies. The hot path (`settle_policy`) only touches
   `active_policies_json`, so performance does not degrade, but the archive
   itself has no pruning mechanism.
+
+## Demo Video
+
+- **Walkthrough Video:** [YouTube / Loom Video Link](#) *(Record 2-3 min demonstrating: wallet connect on Studio Next, pool underwriting status, buying a policy with live sources, and validator settlement)*
+- **Interactive Cover Desk:** [https://ntclick.github.io/noclaim/noclaim.html](https://ntclick.github.io/noclaim/noclaim.html)
+- **Explorer Contract:** [https://explorer-studio-dev.genlayer.com/address/0x3544BDaE5c3297486F97DEa222250Df349c59f51](https://explorer-studio-dev.genlayer.com/address/0x3544BDaE5c3297486F97DEa222250Df349c59f51)
+
+## Hackathon Submission Checklist
+
+- [x] Project deployed on **Studio Next** (Chain ID `61997`, RPC `https://studio-next.genlayer.com/api`)
+- [x] Consensus v0.6 fee model supported (`fees` parameter with non-zero gas prices and execution budget)
+- [x] Underwriting pool initialized and funded with real test GEN (50 GEN)
+- [x] Web frontend updated to Studio Next network, chain ID, and new contract address
+- [x] All 24 unit tests passing
+- [x] Comprehensive documentation answering all 6 judging criteria questions

@@ -13,9 +13,9 @@
 <script type="importmap">
 {
   "imports": {
-    "genlayer-js": "https://esm.sh/genlayer-js@1.1.8",
-    "genlayer-js/chains": "https://esm.sh/genlayer-js@1.1.8/chains",
-    "genlayer-js/types": "https://esm.sh/genlayer-js@1.1.8/types"
+    "genlayer-js": "https://esm.sh/genlayer-js@2.0.0-rc.1",
+    "genlayer-js/chains": "https://esm.sh/genlayer-js@2.0.0-rc.1/chains",
+    "genlayer-js/types": "https://esm.sh/genlayer-js@2.0.0-rc.1/types"
   }
 }
 </script>
@@ -30,8 +30,8 @@
   <div class="wrap netbar-inner">
     <span class="net-state">
       <span class="dot"></span>
-      <strong>GenLayer StudioNet</strong>
-      <span class="net-id">chain 61999</span>
+      <strong>GenLayer Studio Next</strong>
+      <span class="net-id">chain 61997</span>
     </span>
     <a class="net-contract" id="net-contract-cover" href="#" target="_blank" rel="noopener" title="The NoClaim contract on the explorer">
       <span class="label">noclaim</span>
@@ -75,7 +75,7 @@
       <div><dt>Capital in the pool</dt><dd id="stat-pool">&mdash;</dd></div>
       <div><dt>Free to underwrite</dt><dd id="stat-free">&mdash;</dd></div>
     </dl>
-    <p class="hero-note">Live from the contract on StudioNet, not a screenshot.</p>
+    <p class="hero-note">Live from the contract on Studio Next, not a screenshot.</p>
   </section>
 
   <section class="band">
@@ -307,11 +307,11 @@ result = gl.vm.run_nondet_unsafe(leader_fn, validator_fn)</code></pre>
     <figure class="code">
       <figcaption>genlayer-py &mdash; write cover from a script</figcaption>
       <pre><code><span class="k">from</span> genlayer_py <span class="k">import</span> create_client
-<span class="k">from</span> genlayer_py.chains <span class="k">import</span> studionet
+<span class="k">from</span> genlayer_py.chains <span class="k">import</span> studio_devnet
 
-client = create_client(chain=studionet, account=account)
+client = create_client(chain=studio_devnet, account=account)
 client.write_contract(
-    address=<span class="s">"0xB21Bb12256e9EaEfa5Af906F73Ff7766b6b1cce7"</span>,
+    address=<span class="s">"0x3544BDaE5c3297486F97DEa222250Df349c59f51"</span>,
     function_name=<span class="s">"buy_policy"</span>,
     args=[trigger, criteria, sources, payout_wei, expires_ts],
     value=premium_wei,
@@ -328,7 +328,7 @@ client.write_contract(
     </p>
     <p class="fineprint">
       Source, tests and the deployment notes are in the repository, including
-      the integration test that writes cover on StudioNet, waits for it to
+      the integration test that writes cover on Studio Next, waits for it to
       expire, and asserts on what the validators actually decided.
     </p>
   </section>
@@ -340,7 +340,7 @@ client.write_contract(
       <p>
         Connect any EVM wallet, take some test GEN, and buy cover against
         rainfall, a heatwave, an earthquake count or a price floor &mdash; each
-        template builds its trigger from live data as you click it. StudioNet is
+        template builds its trigger from live data as you click it. Studio Next is
         a test network; none of it costs real money.
       </p>
       <a class="btn-link primary" href="noclaim.html">Open the cover desk</a>
@@ -352,13 +352,13 @@ client.write_contract(
 <footer class="wrap">
   <p>
     Intelligent Contract <code id="footer-address">&mdash;</code> running in
-    GenVM on GenLayer StudioNet, chain 61999.
+    GenVM on GenLayer Studio Next, chain 61997.
     <a id="explorer-link" href="#" target="_blank" rel="noopener">View on the explorer</a>
   </p>
   <p class="fineprint">
     Settled by GenLayer's Optimistic Democracy: validators fetch the sources
     independently, run the same prompt, and the transaction only lands if their
-    verdicts match. No oracle, no adjuster, no admin key. StudioNet is a test
+    verdicts match. No oracle, no adjuster, no admin key. Studio Next is a test
     network; the GEN on it is not worth anything.
   </p>
 </footer>

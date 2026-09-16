@@ -35,9 +35,9 @@ from gltest.assertions import tx_execution_succeeded
 
 
 GEN = 10**18
-RPC = "https://studio.genlayer.com/api"
+RPC = "https://studio-next.genlayer.com/api"
 CONTRACT = os.environ.get(
-    "NOCLAIM_CONTRACT", "0xBF326FA29B839cF95d3c9d0895b7A852031C3822"
+    "NOCLAIM_CONTRACT", "0x3544BDaE5c3297486F97DEa222250Df349c59f51"
 )
 
 # Six minutes: over the contract's five-minute floor, and short enough that

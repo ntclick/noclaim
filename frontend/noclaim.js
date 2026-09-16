@@ -28,7 +28,7 @@ import { COVER_TEMPLATES } from './cover-templates.js';
 // Deployed and exercised by tests/integration/test_noclaim_studionet.py: cover
 // refused when unbacked, a policy settled from real price evidence, and an
 // unknowable trigger refunded in full.
-const CONTRACT = '0xB21Bb12256e9EaEfa5Af906F73Ff7766b6b1cce7';
+const CONTRACT = '0x3544BDaE5c3297486F97DEa222250Df349c59f51';
 const BLOCKED_SOURCE_HOSTS = ['binance.com'];
 
 const contract = makeContract(CONTRACT);
@@ -49,7 +49,7 @@ function renderNetbar() {
 
   $('netbar').className = `netbar${wrong ? ' wrong' : ''}`;
   $('net-dot').className = `dot${wrong ? ' bad' : ''}`;
-  setText($('net-name'), wrong ? chain.name : 'GenLayer StudioNet');
+  setText($('net-name'), wrong ? chain.name : 'GenLayer Studio Next');
   $('net-id').hidden = wrong;
   $('btn-switch-chain').hidden = !wrong;
 
@@ -638,7 +638,7 @@ async function main() {
     const ok = await ensureStudioChain();
     signer.chainId = await readChainId();
     renderNetbar();
-    toast(ok ? 'Now on StudioNet' : 'Could not switch - approve it in your wallet', ok ? 'success' : 'error');
+    toast(ok ? 'Now on Studio Next' : 'Could not switch - approve it in your wallet', ok ? 'success' : 'error');
     if (ok) await reloadAll({ force: true });
   };
 

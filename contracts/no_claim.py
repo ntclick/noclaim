@@ -1,5 +1,6 @@
+# { "Depends": "py-genlayer:5jycge4q8k23462jtb0b9fyey1s9qz928sz2nbrd9mg4sxqg2qng" }
+
 # v0.2.0 -- NoClaim: parametric cover that pays without a claim being filed
-# { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
 
 # GenVM parses the two lines above as the "runner comment" and is strict about them:
 # line 1 must START with the version token, the Depends line must come immediately
@@ -31,6 +32,7 @@
 #      get_policies_page / get_active_policies give callers efficient access
 #      without pulling the entire history.
 
+import genlayer as gl
 from genlayer import *
 
 import json
@@ -163,7 +165,7 @@ def _validate_source_url(url: str) -> None:
             pass  # not a numeric IP -- treat as hostname, fine
 
 
-class NoClaim(gl.Contract):
+class NoClaim(gl.contract.Contract):
     """
     NoClaim -- parametric cover, settled by AI-validator consensus.
 
