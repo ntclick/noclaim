@@ -3,10 +3,10 @@
 **Track:** Prediction Markets & Real-World Settlement — Agent Tank hackathon
 (`https://portal.genlayer.foundation/agent-tank/hackathon`)
 
-**Demo App (Cover Desk):**
-- Live App Path: <https://noclaim-i6xq.onrender.com/noclaim.html>
-- GitHub Pages Mirror: <https://ntclick.github.io/noclaim/noclaim.html>
+**Live Application (Render):**
+- Cover Desk (App Flow): <https://noclaim-i6xq.onrender.com/noclaim.html>
 - Landing Page: <https://noclaim-i6xq.onrender.com/>
+- GitHub Repository: <https://github.com/ntclick/noclaim>
 
 **Contract:** [`0x3544BDaE5c3297486F97DEa222250Df349c59f51`](https://explorer-studio-dev.genlayer.com/address/0x3544BDaE5c3297486F97DEa222250Df349c59f51)
 on GenLayer Studio Next, chain 61997 — every policy ever written, the underwriting pool, and the
@@ -272,7 +272,7 @@ work as before by merging both stores.
 ## Demo Video
 
 - **Walkthrough Video:** [YouTube / Loom Video Link](#) *(Record 2-3 min demonstrating: wallet connect on Studio Next, pool underwriting status, buying a policy with live sources, and validator settlement)*
-- **Interactive Cover Desk:** [https://ntclick.github.io/noclaim/noclaim.html](https://ntclick.github.io/noclaim/noclaim.html)
+- **Interactive Cover Desk:** [https://noclaim-i6xq.onrender.com/noclaim.html](https://noclaim-i6xq.onrender.com/noclaim.html)
 - **Explorer Contract:** [https://explorer-studio-dev.genlayer.com/address/0x3544BDaE5c3297486F97DEa222250Df349c59f51](https://explorer-studio-dev.genlayer.com/address/0x3544BDaE5c3297486F97DEa222250Df349c59f51)
 
 ## Hackathon Submission Checklist
