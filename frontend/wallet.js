@@ -90,6 +90,9 @@ export function toast(message, kind = 'info') {
  *  message the contract itself raised. */
 export function cleanError(e) {
   const raw = String(e?.message || e);
+  if (raw.includes('Disconnected') || raw.includes('Page reload required') || raw.includes('write after end')) {
+    return 'Wallet extension disconnected. Please reload the page (Ctrl+F5).';
+  }
   const m = raw.match(/UserError[^"]*?:?\s*([^"'\\}]{5,200})/);
   if (m) return m[1].trim();
   return raw.length > 200 ? raw.slice(0, 200) + '...' : raw;
@@ -202,6 +205,11 @@ export async function rpc(method, params, tries = 2) {
 // --- network ---------------------------------------------------------
 
 export function getProvider() {
+  if (window.ethereum?.providers?.length) {
+    const mm = window.ethereum.providers.find((p) => p.isMetaMask && !p.isOkxWallet);
+    if (mm) return mm;
+    return window.ethereum.providers[0];
+  }
   return window.ethereum || window.okxwallet || null;
 }
 
@@ -304,6 +312,12 @@ function bindProviderEvents(provider) {
     signer.chainId = id;
     onChange();
   });
+
+  provider.on?.('disconnect', async (err) => {
+    console.warn('Wallet disconnected:', err);
+    toast('Wallet extension disconnected. Please reload page (Ctrl+F5).', 'error');
+    signOut();
+  });
 }
 
 export async function connectWallet({ silent = false } = {}) {
@@ -320,6 +334,11 @@ export async function connectWallet({ silent = false } = {}) {
     });
   } catch (e) {
     console.error('wallet connect rejected', e);
+    const msg = String(e?.message || e);
+    if (msg.includes('Disconnected') || msg.includes('Page reload required') || msg.includes('write after end')) {
+      if (!silent) toast('Wallet extension disconnected. Please reload the page (Ctrl+F5).', 'error');
+      return false;
+    }
     if (!silent) toast(e?.code === 4001 ? 'Connection cancelled' : cleanError(e), 'error');
     return false;
   }
