@@ -16,7 +16,7 @@ import { markSvg, faviconHref } from './brand.js';
 
 const RPC = 'https://studio-next.genlayer.com/api';
 const EXPLORER = 'https://explorer-studio-dev.genlayer.com';
-const CONTRACT = '0x3544BDaE5c3297486F97DEa222250Df349c59f51';
+const CONTRACT = '0xC40ad8b4c7Cfa1f55735DA4D658018C74b7037a8';
 const ONE_GEN = 10n ** 18n;
 
 const $ = (id) => document.getElementById(id);

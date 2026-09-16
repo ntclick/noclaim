@@ -333,10 +333,15 @@ class NoClaim(gl.contract.Contract):
             parts = []
             for url in sources[:MAX_SOURCES]:
                 try:
-                    resp = gl.nondet.web.get(url)
-                    parts.append(f"SOURCE: {url}\n{str(resp.body)[:MAX_SOURCE_CHARS]}")
-                except Exception:
-                    parts.append(f"SOURCE: {url}\n(fetch failed)")
+                    if hasattr(gl.nondet, "web") and hasattr(gl.nondet.web, "render"):
+                        body = gl.nondet.web.render(url, mode="text")
+                    elif hasattr(gl.nondet, "web") and hasattr(gl.nondet.web, "get"):
+                        body = gl.nondet.web.get(url).body
+                    else:
+                        body = gl.nondet.get_webpage(url)
+                    parts.append(f"SOURCE: {url}\n{str(body)[:MAX_SOURCE_CHARS]}")
+                except Exception as e:
+                    parts.append(f"SOURCE: {url}\n(fetch failed: {e})")
             context = "\n\n".join(parts) if parts else "(no sources provided)"
 
             prompt = (
@@ -369,7 +374,12 @@ class NoClaim(gl.contract.Contract):
             except Exception:
                 return False
 
-        result = gl.vm.run_nondet_unsafe(leader_fn, validator_fn)
+        run_fn = (
+            getattr(gl.vm, "run_nondet", None)
+            or getattr(gl.vm, "run_nondet_unsafe", None)
+            or getattr(gl.vm, "run_nondet_default", None)
+        )
+        result = run_fn(leader_fn, validator_fn)
         if isinstance(result, str):
             try:
                 result = json.loads(result)

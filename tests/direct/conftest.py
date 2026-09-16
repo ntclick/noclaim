@@ -86,11 +86,14 @@ class MockVM:
     Return = MockReturn
 
     @staticmethod
-    def run_nondet_unsafe(leader_fn, validator_fn):
+    def run_nondet(leader_fn, validator_fn):
         res = leader_fn()
         ok = validator_fn(MockReturn(res))
         assert ok, "validator_fn rejected leader_fn's own result — equivalence bug"
         return res
+
+    run_nondet_unsafe = run_nondet
+    run_nondet_default = run_nondet
 
 
 class MockWebResponse:

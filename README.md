@@ -8,7 +8,7 @@
 - Landing Page: <https://noclaim-i6xq.onrender.com/>
 - GitHub Repository: <https://github.com/ntclick/noclaim>
 
-**Contract:** [`0x3544BDaE5c3297486F97DEa222250Df349c59f51`](https://explorer-studio-dev.genlayer.com/address/0x3544BDaE5c3297486F97DEa222250Df349c59f51)
+**Contract:** [`0xC40ad8b4c7Cfa1f55735DA4D658018C74b7037a8`](https://explorer-studio-dev.genlayer.com/address/0xC40ad8b4c7Cfa1f55735DA4D658018C74b7037a8)
 on GenLayer Studio Next, chain 61997 — every policy ever written, the underwriting pool, and the
 reasoning the validators agreed on, is readable there on the explorer.
 
@@ -21,8 +21,8 @@ reasoning the validators agreed on, is readable there on the explorer.
 | **Network** | **GenLayer Studio Next** (Consensus v0.6 RC) |
 | **RPC URL** | `https://studio-next.genlayer.com/api` |
 | **Chain ID** | `61997` (`0xf22d`) |
-| **Contract Address** | [`0x3544BDaE5c3297486F97DEa222250Df349c59f51`](https://explorer-studio-dev.genlayer.com/address/0x3544BDaE5c3297486F97DEa222250Df349c59f51) |
-| **Explorer** | [explorer-studio-dev.genlayer.com](https://explorer-studio-dev.genlayer.com/address/0x3544BDaE5c3297486F97DEa222250Df349c59f51) |
+| **Contract Address** | [`0xC40ad8b4c7Cfa1f55735DA4D658018C74b7037a8`](https://explorer-studio-dev.genlayer.com/address/0xC40ad8b4c7Cfa1f55735DA4D658018C74b7037a8) |
+| **Explorer** | [explorer-studio-dev.genlayer.com](https://explorer-studio-dev.genlayer.com/address/0xC40ad8b4c7Cfa1f55735DA4D658018C74b7037a8) |
 | **Initial Pool Funding** | 50 GEN committed by underwriters |
 | **Demo Video** | [Watch Loom / YouTube Demo Walkthrough](#demo-video) |
 
@@ -273,7 +273,7 @@ work as before by merging both stores.
 
 - **Walkthrough Video:** [YouTube / Loom Video Link](#) *(Record 2-3 min demonstrating: wallet connect on Studio Next, pool underwriting status, buying a policy with live sources, and validator settlement)*
 - **Interactive Cover Desk:** [https://noclaim-i6xq.onrender.com/noclaim.html](https://noclaim-i6xq.onrender.com/noclaim.html)
-- **Explorer Contract:** [https://explorer-studio-dev.genlayer.com/address/0x3544BDaE5c3297486F97DEa222250Df349c59f51](https://explorer-studio-dev.genlayer.com/address/0x3544BDaE5c3297486F97DEa222250Df349c59f51)
+- **Explorer Contract:** [https://explorer-studio-dev.genlayer.com/address/0xC40ad8b4c7Cfa1f55735DA4D658018C74b7037a8](https://explorer-studio-dev.genlayer.com/address/0xC40ad8b4c7Cfa1f55735DA4D658018C74b7037a8)
 
 ## Hackathon Submission Checklist
 
