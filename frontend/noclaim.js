@@ -20,7 +20,7 @@ import {
   $, signer, isSignedIn, initWallet, connectWallet, signOut, ensureStudioChain,
   readChainId, chainLabel, makeContract, toast, withBusy, cleanError,
   gen, toWei, shorten, escapeHtml, setText, rpc, isBusy, isRateLimited,
-  EXPLORER, ONE_GEN,
+  EXPLORER, ONE_GEN, updateTxStatus,
 } from './wallet.js';
 import { markSvg, faviconHref } from './brand.js';
 import { COVER_TEMPLATES } from './cover-templates.js';
@@ -39,6 +39,7 @@ let mine = [];
 let walletGen = 0n;
 let uwStake = 0n;
 let owed = 0n;
+let autoFundedAddress = null;
 
 // --- the network bar -------------------------------------------------
 
@@ -83,6 +84,8 @@ function renderSteps() {
     if (isDone) done++;
     else pending = false;
   }
+  const faucetBtn = $('step-gen-btn');
+  if (faucetBtn) setText(faucetBtn, walletGen > 0n ? 'Faucet tự động mở (+20 GEN)' : 'Faucet tự động mở');
   // The checklist stays on the page once it is complete. Hiding it would take
   // away the only place that says how any of this works, which is exactly what
   // someone arriving second on a shared screen needs to read.
@@ -191,12 +194,15 @@ function policyCard(p) {
   `;
 
   if (state.key === 'due') {
+    const actWrap = document.createElement('div');
+    actWrap.className = 'action-status-wrap';
     const b = document.createElement('button');
-    b.className = 'ghost small';
+    b.className = 'ghost small settle-btn';
     b.textContent = 'Settle now';
     b.title = 'Anyone can settle an expired policy - there is no adjuster to appoint';
-    b.onclick = () => settle(p);
-    card.querySelector('.policy-actions').appendChild(b);
+    b.onclick = () => settle(p, b);
+    actWrap.appendChild(b);
+    card.querySelector('.policy-actions').appendChild(actWrap);
   }
   return card;
 }
@@ -316,6 +322,7 @@ async function refreshAccount() {
   renderAccount();
   if (!signer.address) {
     walletGen = 0n; uwStake = 0n; owed = 0n;
+    autoFundedAddress = null;
     setText($('uw-stake'), '-');
     $('collect-panel').hidden = true;
     renderSteps();
@@ -328,6 +335,21 @@ async function refreshAccount() {
     walletGen = BigInt(await rpc('eth_getBalance', [signer.address, 'latest']));
     renderNetbar();
   } catch (e) { console.debug('wallet balance', e); }
+
+  if (signer.address && $('faucet-custom-addr') && !$('faucet-custom-addr').value) {
+    $('faucet-custom-addr').value = signer.address;
+  }
+
+  // Auto-faucet: if wallet is connected on devnet and balance is 0, auto-faucet for gas fees
+  if (signer.address && walletGen === 0n && autoFundedAddress !== signer.address.toLowerCase() && !isBusy()) {
+    autoFundedAddress = signer.address.toLowerCase();
+    console.log('Balance is 0 GEN on Devnet - triggering auto-faucet...');
+    setTimeout(() => {
+      if (!isBusy() && walletGen === 0n && signer.address) {
+        getTestGen({ auto: true });
+      }
+    }, 400);
+  }
   try {
     owed = BigInt(await contract.read('get_balance', [signer.address]));
     $('collect-panel').hidden = owed === 0n;
@@ -396,7 +418,8 @@ async function buyCover(event) {
   event.preventDefault();
   if (!requireSignIn('buy cover')) return;
   const expires = Math.floor(Date.now() / 1000) + Number($('f-window').value) * 60;
-  await withBusy('Writing the policy', async () => {
+  const btn = $('btn-buy');
+  await withBusy('Writing policy', async () => {
     await contract.write('buy_policy', [
       $('f-trigger').value.trim(),
       $('f-criteria').value.trim(),
@@ -409,12 +432,12 @@ async function buyCover(event) {
     $('source-preview').hidden = true;
     await reloadAll({ force: true });
     showTab('mine');
-  });
+  }, btn);
 }
 
-async function settle(policy) {
+async function settle(policy, btn = null) {
   if (!requireSignIn('settle a policy')) return;
-  await withBusy('Adjudicating - validators are fetching the evidence', async () => {
+  await withBusy(`Adjudicating policy #${policy.id}`, async () => {
     await contract.write('settle_policy', [Number(policy.id)]);
     await reloadAll({ force: true });
     const fresh = policies.find((p) => p.id === policy.id);
@@ -427,29 +450,31 @@ async function settle(policy) {
       EXPIRED: 'The event did not happen, so this cover pays nothing. The premium stays with the pool.',
     }[fresh?.settlement];
     toast(said || 'Settled', fresh?.settlement === 'EXPIRED' ? 'info' : 'success');
-  });
+  }, btn);
 }
 
 async function collect() {
   if (!requireSignIn('collect')) return;
-  await withBusy('Collecting', async () => {
+  const btn = $('btn-collect-all');
+  await withBusy('Collecting payout', async () => {
     const before = await walletBalanceNow();
     await contract.write('withdraw_all', []);
     await refreshAccount();
     await awaitPayout(before, 'Collected');
     await refreshAccount();
-  });
+  }, btn);
 }
 
 async function fundPool() {
   if (!requireSignIn('underwrite')) return;
   const amount = prompt('How much GEN to put behind this pool?', '10');
   if (!amount) return;
-  await withBusy('Adding capital', async () => {
+  const btn = $('btn-fund-pool');
+  await withBusy('Adding capital to pool', async () => {
     await contract.write('fund_pool', [], toWei(amount));
     toast('Capital added - you are now underwriting', 'success');
     await reloadAll({ force: true });
-  });
+  }, btn);
 }
 
 async function withdrawPool() {
@@ -457,23 +482,67 @@ async function withdrawPool() {
   const free = pool ? gen(BigInt(pool.free)) : '0';
   const amount = prompt(`Only unreserved capital can leave. ${free} GEN is free.`, free);
   if (!amount) return;
-  await withBusy('Withdrawing', async () => {
+  const btn = $('btn-withdraw-pool');
+  await withBusy('Withdrawing capital from pool', async () => {
     const before = await walletBalanceNow();
     await contract.write('withdraw_pool', [toWei(amount)]);
     await reloadAll({ force: true });
     await awaitPayout(before, 'Withdrawn from the pool');
     await refreshAccount();
-  });
+  }, btn);
 }
 
-async function getTestGen() {
-  if (!requireSignIn('get test GEN')) return;
-  await withBusy('Requesting test GEN', async () => {
-    await rpc('sim_fundAccount', [signer.address, Number(20n * ONE_GEN)]);
-    await new Promise((r) => setTimeout(r, 2000));
+async function getTestGen({ auto = false, targetAddress = null } = {}, btn = null) {
+  const customAddr = $('faucet-custom-addr')?.value?.trim();
+  const address = targetAddress || customAddr || signer.address;
+  if (!address) {
+    if (!requireSignIn('get test GEN')) return;
+  }
+  const triggerBtn = btn || $('step-gen-btn');
+  await withBusy(auto ? 'Auto-funding 20 test GEN' : 'Requesting test GEN', async () => {
+    let funded = false;
+
+    // 1. Try local server faucet proxy first (fast, reliable, verified)
+    try {
+      updateTxStatus('Connecting to faucet proxy...', 30);
+      const res = await fetch(`/api/faucet?address=${encodeURIComponent(address)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.ok) {
+          funded = true;
+          updateTxStatus(`Funded! Balance: ${data.balance} GEN`, 90);
+          if (signer.address && address.toLowerCase() === signer.address.toLowerCase()) {
+            walletGen = BigInt(Math.floor(parseFloat(data.balance) * 1e18));
+            renderNetbar();
+            renderSteps();
+          }
+        }
+      }
+    } catch (e) {
+      console.debug('Local faucet endpoint not available, falling back to direct RPC:', e);
+    }
+
+    // 2. Fallback to direct RPC sim_fundAccount
+    if (!funded) {
+      updateTxStatus('Calling RPC sim_fundAccount directly...', 45);
+      await rpc('sim_fundAccount', [address, Number(20n * ONE_GEN)]);
+      updateTxStatus('Funding tx submitted! Waiting for balance update...', 85);
+      for (let i = 0; i < 5; i++) {
+        await new Promise((r) => setTimeout(r, 1500));
+        try {
+          const b = BigInt(await rpc('eth_getBalance', [address, 'latest']));
+          if (b > 0n) {
+            walletGen = b;
+            renderNetbar();
+            break;
+          }
+        } catch {}
+      }
+    }
+
     await refreshAccount();
-    toast('Funded with 20 test GEN', 'success');
-  });
+    toast(auto ? 'Auto-funded 20 test GEN for gas fees!' : 'Funded with 20 test GEN', 'success');
+  }, triggerBtn);
 }
 
 // --- sources ---------------------------------------------------------
@@ -642,7 +711,22 @@ async function main() {
     if (ok) await reloadAll({ force: true });
   };
 
-  $('step-gen-btn').onclick = getTestGen;
+  $('step-gen-btn').onclick = () => getTestGen({}, $('step-gen-btn'));
+  const netbarFaucet = $('netbar-faucet-btn');
+  if (netbarFaucet) {
+    netbarFaucet.onclick = () => getTestGen({}, netbarFaucet);
+  }
+  const customBtn = $('faucet-custom-btn');
+  if (customBtn) {
+    customBtn.onclick = () => {
+      const a = $('faucet-custom-addr')?.value?.trim();
+      if (!a || !a.startsWith('0x')) {
+        toast('Please enter a valid wallet address starting with 0x', 'error');
+        return;
+      }
+      getTestGen({ targetAddress: a }, customBtn);
+    };
+  }
   $('step-buy-btn').onclick = () => { showTab('buy'); $('panel-buy').scrollIntoView({ behavior: 'smooth' }); };
   $('step-uw-btn').onclick = () => { showTab('underwrite'); $('panel-underwrite').scrollIntoView({ behavior: 'smooth' }); };
 

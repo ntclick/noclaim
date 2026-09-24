@@ -101,21 +101,188 @@ export function cleanError(e) {
 let busy = false;
 export const isBusy = () => busy;
 
-/** Runs an action with the buttons disabled, so a slow consensus round cannot
- *  be double-submitted by an impatient second click. */
-export async function withBusy(label, fn) {
-  if (busy) { toast('Still waiting on the previous transaction', 'info'); return; }
+let activeTxStatusCallback = null;
+
+export function updateTxStatus(message, percent = null, state = 'info') {
+  if (activeTxStatusCallback) {
+    activeTxStatusCallback(message, percent, state);
+  }
+}
+
+function getOrCreateInlineStatus(btn) {
+  if (!btn) return null;
+  const parent = btn.parentElement;
+  let stat = parent ? parent.querySelector('.inline-status') : null;
+  if (!stat) {
+    stat = document.createElement('span');
+    stat.className = 'inline-status';
+    btn.insertAdjacentElement('afterend', stat);
+  }
+  return stat;
+}
+
+function getOrCreateTxPopup() {
+  let popup = $('tx-popup');
+  if (popup) return popup;
+  popup = document.createElement('div');
+  popup.id = 'tx-popup';
+  popup.className = 'tx-popup';
+  popup.hidden = true;
+  popup.innerHTML = `
+    <div class="tx-popup-card" id="tx-popup-card">
+      <div class="tx-popup-header">
+        <div class="tx-popup-status-badge" id="tx-popup-badge">
+          <span class="tx-spinner small" id="tx-popup-spinner"></span>
+          <span id="tx-popup-icon" hidden></span>
+        </div>
+        <div class="tx-popup-headings">
+          <div class="tx-popup-title-row">
+            <strong id="tx-popup-title">Transaction in Progress</strong>
+            <span id="tx-popup-timer" class="tx-popup-timer">0s</span>
+          </div>
+          <div id="tx-popup-label" class="tx-popup-label"></div>
+        </div>
+        <button type="button" id="tx-popup-close" class="tx-popup-close" title="Dismiss" hidden aria-label="Close">&times;</button>
+      </div>
+      <div class="tx-popup-body">
+        <div class="tx-popup-msg-row">
+          <span id="tx-popup-msg">Waiting for wallet approval...</span>
+        </div>
+        <div class="tx-progress-bar">
+          <div class="tx-progress-fill" id="tx-progress-fill" style="width: 15%"></div>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(popup);
+  const closeBtn = popup.querySelector('#tx-popup-close');
+  if (closeBtn) closeBtn.onclick = () => { popup.hidden = true; };
+  return popup;
+}
+
+/** Runs an action with the buttons disabled, showing inline status next to the button
+ *  and a floating progress popup so the user is informed at every step. */
+export async function withBusy(label, fn, triggerBtn = null) {
+  if (busy) {
+    toast('Still waiting on the previous transaction', 'info');
+    return;
+  }
   busy = true;
   document.body.classList.add('busy');
+
+  const btn = triggerBtn || (document.activeElement instanceof HTMLButtonElement ? document.activeElement : null);
+  const inlineEl = btn ? getOrCreateInlineStatus(btn) : null;
+  if (btn) {
+    btn.disabled = true;
+    btn.classList.add('is-busy');
+  }
+
+  const popup = getOrCreateTxPopup();
+  const card = $('tx-popup-card');
+  const titleEl = $('tx-popup-title');
+  const timerEl = $('tx-popup-timer');
+  const labelEl = $('tx-popup-label');
+  const msgEl = $('tx-popup-msg');
+  const fillEl = $('tx-progress-fill');
+  const spinnerEl = $('tx-popup-spinner');
+  const iconEl = $('tx-popup-icon');
+  const closeBtn = $('tx-popup-close');
+
+  if (card) card.className = 'tx-popup-card';
+  if (titleEl) titleEl.textContent = 'Transaction in Progress';
+  if (labelEl) labelEl.textContent = label;
+  if (msgEl) msgEl.textContent = 'Preparing transaction...';
+  if (timerEl) timerEl.textContent = '0s';
+  if (fillEl) fillEl.style.width = '15%';
+  if (spinnerEl) spinnerEl.hidden = false;
+  if (iconEl) iconEl.hidden = true;
+  if (closeBtn) closeBtn.hidden = true;
+  popup.hidden = false;
+
+  if (inlineEl) {
+    inlineEl.className = 'inline-status is-loading';
+    inlineEl.innerHTML = `<span class="tx-spinner small"></span> <span class="tx-inline-text">${escapeHtml(label)}...</span>`;
+    inlineEl.hidden = false;
+  }
+
+  const startTime = Date.now();
+  const timerInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    if (timerEl) timerEl.textContent = `${elapsed}s`;
+  }, 1000);
+
+  activeTxStatusCallback = (text, percent = null, state = 'info') => {
+    if (msgEl) msgEl.textContent = text;
+    if (percent !== null && fillEl) fillEl.style.width = `${percent}%`;
+    if (inlineEl) {
+      const textSpan = inlineEl.querySelector('.tx-inline-text');
+      if (textSpan) textSpan.textContent = text;
+    }
+  };
+
   try {
     toast(`${label}... this takes about a minute to reach consensus`);
-    return await fn();
+    const result = await fn();
+
+    if (card) card.classList.add('is-success');
+    if (titleEl) titleEl.textContent = 'Transaction Confirmed';
+    if (msgEl) msgEl.textContent = 'Finalized on GenLayer Studio Next!';
+    if (fillEl) fillEl.style.width = '100%';
+    if (spinnerEl) spinnerEl.hidden = true;
+    if (iconEl) {
+      iconEl.textContent = '✓';
+      iconEl.hidden = false;
+    }
+    if (closeBtn) closeBtn.hidden = false;
+
+    if (inlineEl) {
+      inlineEl.className = 'inline-status is-success';
+      inlineEl.innerHTML = `<span>✓</span> <span class="tx-inline-text">Confirmed!</span>`;
+      setTimeout(() => {
+        if (!busy) inlineEl.hidden = true;
+      }, 4000);
+    }
+
+    setTimeout(() => {
+      if (!busy) popup.hidden = true;
+    }, 4500);
+
+    return result;
   } catch (e) {
     console.error(e);
-    toast(cleanError(e), 'error');
+    const errText = cleanError(e);
+    toast(errText, 'error');
+
+    if (card) card.classList.add('is-error');
+    if (titleEl) titleEl.textContent = 'Transaction Failed';
+    if (msgEl) msgEl.textContent = errText;
+    if (spinnerEl) spinnerEl.hidden = true;
+    if (iconEl) {
+      iconEl.textContent = '!';
+      iconEl.hidden = false;
+    }
+    if (closeBtn) closeBtn.hidden = false;
+
+    if (inlineEl) {
+      inlineEl.className = 'inline-status is-error';
+      inlineEl.innerHTML = `<span>✕</span> <span class="tx-inline-text">${escapeHtml(errText)}</span>`;
+      setTimeout(() => {
+        if (!busy) inlineEl.hidden = true;
+      }, 7000);
+    }
+
+    setTimeout(() => {
+      if (!busy) popup.hidden = true;
+    }, 8500);
   } finally {
+    clearInterval(timerInterval);
+    activeTxStatusCallback = null;
     busy = false;
     document.body.classList.remove('busy');
+    if (btn) {
+      btn.disabled = false;
+      btn.classList.remove('is-busy');
+    }
   }
 }
 
@@ -424,6 +591,7 @@ export function makeContract(address) {
       if (!ok) {
         throw new Error('Your wallet is not on GenLayer Studio Next (chain 61997). Switch network and try again.');
       }
+      updateTxStatus('Please confirm transaction in your wallet...', 25);
       let hash;
       const fees = {
         distribution: {
@@ -452,6 +620,7 @@ export function makeContract(address) {
         }
         throw e;
       }
+      updateTxStatus(`Tx submitted (${shorten(hash)}). Waiting for consensus (~30-60s)...`, 60);
       try {
         await signer.client.waitForTransactionReceipt({
           hash, waitUntil: 'finalized', interval: 3000, retries: 60,
@@ -461,10 +630,12 @@ export function makeContract(address) {
           hash, status: TransactionStatus.ACCEPTED, interval: 3000, retries: 60,
         });
       }
+      updateTxStatus('Consensus reached! Finalizing state...', 90);
       // ACCEPTED does not mean a read will see it yet: reading straight after a
       // write returned pre-transaction state, so a success message appeared over
       // unchanged numbers. Waiting a beat removes that.
       await new Promise((r) => setTimeout(r, 4000));
+      updateTxStatus('Transaction complete!', 100);
       return hash;
     },
   };

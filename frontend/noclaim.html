@@ -43,6 +43,7 @@
              account holding millions is invisible in the wallet itself, and
              that is exactly how "the money never arrived" gets reported. -->
         <span class="net-gen"><code id="wallet-gen">-</code> GEN</span>
+        <button id="netbar-faucet-btn" class="netbar-faucet-btn" title="Request 20 test GEN for fees">+ Faucet</button>
         <button id="btn-signout" class="link">disconnect</button>
       </span>
       <button id="btn-connect" class="primary small">Connect wallet</button>
@@ -87,9 +88,20 @@
     <li id="step-gen">
       <span class="tick"></span>
       <div>
-        <h3>Take some test GEN</h3>
-        <p>Studio Next is a test network. The GEN is free and worth nothing.</p>
-        <button class="ghost small" id="step-gen-btn">Get 20 test GEN</button>
+        <h3>Faucet tự động mở</h3>
+        <p>Studio Next is a test network. The GEN is free and worth nothing for gas fees. <span class="auto-faucet-tag">⚡ Tự động faucet khi kết nối ví</span></p>
+        <div class="faucet-box">
+          <div class="faucet-top-row">
+            <div class="action-status-wrap">
+              <button type="button" class="faucet-main-btn" id="step-gen-btn">Faucet tự động mở (+20 GEN)</button>
+            </div>
+            <span class="faucet-note">Nhận 20 test GEN miễn phí để làm phí giao dịch</span>
+          </div>
+          <div class="faucet-manual-row">
+            <input type="text" id="faucet-custom-addr" placeholder="Dán địa chỉ ví 0x... để faucet ngay" spellcheck="false" class="faucet-input">
+            <button type="button" class="faucet-sub-btn" id="faucet-custom-btn">Faucet ví này</button>
+          </div>
+        </div>
       </div>
     </li>
     <li id="step-act">
@@ -192,7 +204,9 @@
         </div>
 
         <div class="quote" id="quote"></div>
-        <button type="submit" id="btn-buy" class="primary">Buy this cover</button>
+        <div class="action-status-wrap">
+          <button type="submit" id="btn-buy" class="primary">Buy this cover</button>
+        </div>
         <p class="fineprint" id="buy-hint"></p>
       </form>
     </div>
@@ -205,7 +219,9 @@
         <strong id="collect-line"></strong>
         <p class="fineprint">A paid claim, a refunded premium, or both. It is credited to you until you take it.</p>
       </div>
-      <button id="btn-collect-all" class="primary">Collect</button>
+      <div class="action-status-wrap">
+        <button id="btn-collect-all" class="primary">Collect</button>
+      </div>
     </div>
     <dl class="mine-summary" id="mine-summary">
       <div><dt>Active cover</dt><dd><span id="mine-active">-</span> <span class="unit">GEN</span></dd></div>
@@ -246,7 +262,7 @@
         <div><dt>Free to withdraw</dt><dd><span id="uw-free">-</span> <span class="unit">GEN</span></dd></div>
         <div><dt>Underwriters</dt><dd id="uw-count">-</dd></div>
       </dl>
-      <div class="account-actions" id="uw-actions">
+      <div class="account-actions action-status-wrap" id="uw-actions">
         <button id="btn-fund-pool" class="primary">Add capital</button>
         <button id="btn-withdraw-pool" class="ghost">Withdraw</button>
       </div>
@@ -269,6 +285,33 @@
 </footer>
 
 <div id="toast" class="toast" hidden></div>
+
+<div id="tx-popup" class="tx-popup" hidden>
+  <div class="tx-popup-card" id="tx-popup-card">
+    <div class="tx-popup-header">
+      <div class="tx-popup-status-badge" id="tx-popup-badge">
+        <span class="tx-spinner small" id="tx-popup-spinner"></span>
+        <span id="tx-popup-icon" hidden></span>
+      </div>
+      <div class="tx-popup-headings">
+        <div class="tx-popup-title-row">
+          <strong id="tx-popup-title">Transaction in Progress</strong>
+          <span id="tx-popup-timer" class="tx-popup-timer">0s</span>
+        </div>
+        <div id="tx-popup-label" class="tx-popup-label"></div>
+      </div>
+      <button type="button" id="tx-popup-close" class="tx-popup-close" title="Dismiss" hidden aria-label="Close">&times;</button>
+    </div>
+    <div class="tx-popup-body">
+      <div class="tx-popup-msg-row">
+        <span id="tx-popup-msg">Waiting for wallet approval...</span>
+      </div>
+      <div class="tx-progress-bar">
+        <div class="tx-progress-fill" id="tx-progress-fill" style="width: 15%"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script type="module" src="noclaim.js"></script>
 </body>
