@@ -20,7 +20,7 @@ import {
   $, signer, isSignedIn, initWallet, connectWallet, signOut, ensureStudioChain,
   readChainId, chainLabel, makeContract, toast, withBusy, cleanError,
   gen, toWei, shorten, escapeHtml, setText, rpc, isBusy, isRateLimited,
-  EXPLORER, ONE_GEN, updateTxStatus,
+  EXPLORER, ONE_GEN, updateTxStatus, toChecksumAddress,
 } from './wallet.js';
 import { markSvg, faviconHref } from './brand.js';
 import { COVER_TEMPLATES } from './cover-templates.js';
@@ -85,7 +85,7 @@ function renderSteps() {
     else pending = false;
   }
   const faucetBtn = $('step-gen-btn');
-  if (faucetBtn) setText(faucetBtn, walletGen > 0n ? 'Faucet tự động mở (+20 GEN)' : 'Faucet tự động mở');
+  if (faucetBtn) setText(faucetBtn, walletGen > 0n ? '🚰 Faucet (+20 GEN)' : '🚰 Faucet 20 GEN');
   // The checklist stays on the page once it is complete. Hiding it would take
   // away the only place that says how any of this works, which is exactly what
   // someone arriving second on a shared screen needs to read.
@@ -339,17 +339,6 @@ async function refreshAccount() {
   if (signer.address && $('faucet-custom-addr') && !$('faucet-custom-addr').value) {
     $('faucet-custom-addr').value = signer.address;
   }
-
-  // Auto-faucet: if wallet is connected on devnet and balance is 0, auto-faucet for gas fees
-  if (signer.address && walletGen === 0n && autoFundedAddress !== signer.address.toLowerCase() && !isBusy()) {
-    autoFundedAddress = signer.address.toLowerCase();
-    console.log('Balance is 0 GEN on Devnet - triggering auto-faucet...');
-    setTimeout(() => {
-      if (!isBusy() && walletGen === 0n && signer.address) {
-        getTestGen({ auto: true });
-      }
-    }, 400);
-  }
   try {
     owed = BigInt(await contract.read('get_balance', [signer.address]));
     $('collect-panel').hidden = owed === 0n;
@@ -492,19 +481,31 @@ async function withdrawPool() {
   }, btn);
 }
 
-async function getTestGen({ auto = false, targetAddress = null } = {}, btn = null) {
-  const customAddr = $('faucet-custom-addr')?.value?.trim();
-  const address = targetAddress || customAddr || signer.address;
+async function getTestGen({ targetAddress = null } = {}, btn = null) {
+  let address = targetAddress || $('faucet-custom-addr')?.value?.trim() || signer.address;
   if (!address) {
     if (!requireSignIn('get test GEN')) return;
+    address = signer.address;
   }
-  const triggerBtn = btn || $('step-gen-btn');
-  await withBusy(auto ? 'Auto-funding 20 test GEN' : 'Requesting test GEN', async () => {
+  address = address.trim();
+  if (!address.startsWith('0x') || address.length !== 42) {
+    toast('Please enter a valid EVM wallet address starting with 0x (42 characters)', 'error');
+    return;
+  }
+
+  // Critical: Studio Next consensus validator requires EIP-55 Checksum!
+  address = toChecksumAddress(address);
+  if ($('faucet-custom-addr')) {
+    $('faucet-custom-addr').value = address;
+  }
+
+  const triggerBtn = btn || $('faucet-custom-btn') || $('step-gen-btn');
+  await withBusy('Requesting 20 test GEN', async () => {
     let funded = false;
 
-    // 1. Try local server faucet proxy first (fast, reliable, verified)
+    // 1. Try local server faucet proxy first if running locally
     try {
-      updateTxStatus('Connecting to faucet proxy...', 30);
+      updateTxStatus('Connecting to faucet proxy...', 25);
       const res = await fetch(`/api/faucet?address=${encodeURIComponent(address)}`);
       if (res.ok) {
         const data = await res.json();
@@ -522,18 +523,21 @@ async function getTestGen({ auto = false, targetAddress = null } = {}, btn = nul
       console.debug('Local faucet endpoint not available, falling back to direct RPC:', e);
     }
 
-    // 2. Fallback to direct RPC sim_fundAccount
+    // 2. Direct RPC call to Studio Next (works online everywhere)
     if (!funded) {
-      updateTxStatus('Calling RPC sim_fundAccount directly...', 45);
-      await rpc('sim_fundAccount', [address, Number(20n * ONE_GEN)]);
-      updateTxStatus('Funding tx submitted! Waiting for balance update...', 85);
-      for (let i = 0; i < 5; i++) {
+      updateTxStatus('Sending sim_fundAccount to Studio Next...', 40);
+      const txHash = await rpc('sim_fundAccount', [address, 20000000000000000000]);
+      updateTxStatus(`Tx: ${shorten(txHash)}. Waiting for consensus...`, 75);
+      for (let i = 0; i < 6; i++) {
         await new Promise((r) => setTimeout(r, 1500));
         try {
           const b = BigInt(await rpc('eth_getBalance', [address, 'latest']));
           if (b > 0n) {
-            walletGen = b;
-            renderNetbar();
+            if (signer.address && address.toLowerCase() === signer.address.toLowerCase()) {
+              walletGen = b;
+              renderNetbar();
+              renderSteps();
+            }
             break;
           }
         } catch {}
@@ -541,7 +545,7 @@ async function getTestGen({ auto = false, targetAddress = null } = {}, btn = nul
     }
 
     await refreshAccount();
-    toast(auto ? 'Auto-funded 20 test GEN for gas fees!' : 'Funded with 20 test GEN', 'success');
+    toast(`Funded ${shorten(address)} with 20 test GEN!`, 'success');
   }, triggerBtn);
 }
 
@@ -711,20 +715,72 @@ async function main() {
     if (ok) await reloadAll({ force: true });
   };
 
-  $('step-gen-btn').onclick = () => getTestGen({}, $('step-gen-btn'));
-  const netbarFaucet = $('netbar-faucet-btn');
-  if (netbarFaucet) {
-    netbarFaucet.onclick = () => getTestGen({}, netbarFaucet);
+  const stepGenBtn = $('step-gen-btn');
+  const faucetPanel = $('faucet-panel');
+  if (stepGenBtn) {
+    stepGenBtn.onclick = () => {
+      if (faucetPanel) {
+        const willShow = faucetPanel.hidden;
+        faucetPanel.hidden = !willShow;
+        if (willShow) {
+          if (signer.address && $('faucet-custom-addr') && !$('faucet-custom-addr').value) {
+            $('faucet-custom-addr').value = signer.address;
+          }
+          $('faucet-custom-addr')?.focus();
+        }
+      }
+    };
   }
+
+  const btnCloseFaucet = $('btn-close-faucet');
+  if (btnCloseFaucet) {
+    btnCloseFaucet.onclick = () => {
+      if (faucetPanel) faucetPanel.hidden = true;
+    };
+  }
+
+  const btnLoadWallet = $('btn-load-my-wallet');
+  if (btnLoadWallet) {
+    btnLoadWallet.onclick = () => {
+      if (signer.address) {
+        if ($('faucet-custom-addr')) $('faucet-custom-addr').value = signer.address;
+        toast('Loaded your connected wallet address', 'info');
+      } else {
+        toast('Please connect your wallet first', 'error');
+      }
+    };
+  }
+
+  const btnClearWallet = $('btn-clear-wallet');
+  if (btnClearWallet) {
+    btnClearWallet.onclick = () => {
+      if ($('faucet-custom-addr')) {
+        $('faucet-custom-addr').value = '';
+        $('faucet-custom-addr').focus();
+      }
+    };
+  }
+
   const customBtn = $('faucet-custom-btn');
   if (customBtn) {
     customBtn.onclick = () => {
       const a = $('faucet-custom-addr')?.value?.trim();
-      if (!a || !a.startsWith('0x')) {
-        toast('Please enter a valid wallet address starting with 0x', 'error');
-        return;
-      }
       getTestGen({ targetAddress: a }, customBtn);
+    };
+  }
+
+  const netbarFaucet = $('netbar-faucet-btn');
+  if (netbarFaucet) {
+    netbarFaucet.onclick = () => {
+      if (faucetPanel) {
+        faucetPanel.hidden = false;
+        if (signer.address && $('faucet-custom-addr') && !$('faucet-custom-addr').value) {
+          $('faucet-custom-addr').value = signer.address;
+        }
+        $('step-gen')?.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        getTestGen({}, netbarFaucet);
+      }
     };
   }
   $('step-buy-btn').onclick = () => { showTab('buy'); $('panel-buy').scrollIntoView({ behavior: 'smooth' }); };

@@ -88,18 +88,29 @@
     <li id="step-gen">
       <span class="tick"></span>
       <div>
-        <h3>Faucet tự động mở</h3>
-        <p>Studio Next is a test network. The GEN is free and worth nothing for gas fees. <span class="auto-faucet-tag">⚡ Tự động faucet khi kết nối ví</span></p>
+        <h3>Get test GEN</h3>
+        <p>Studio Next is a test network. The GEN is free and worth nothing for gas fees.</p>
         <div class="faucet-box">
-          <div class="faucet-top-row">
-            <div class="action-status-wrap">
-              <button type="button" class="faucet-main-btn" id="step-gen-btn">Faucet tự động mở (+20 GEN)</button>
-            </div>
-            <span class="faucet-note">Nhận 20 test GEN miễn phí để làm phí giao dịch</span>
+          <div class="faucet-single-btn-wrap" id="faucet-single-btn-wrap">
+            <button type="button" class="faucet-main-btn" id="step-gen-btn">
+              <span>🚰 Faucet 20 GEN</span>
+            </button>
           </div>
-          <div class="faucet-manual-row">
-            <input type="text" id="faucet-custom-addr" placeholder="Dán địa chỉ ví 0x... để faucet ngay" spellcheck="false" class="faucet-input">
-            <button type="button" class="faucet-sub-btn" id="faucet-custom-btn">Faucet ví này</button>
+          <div class="faucet-panel" id="faucet-panel" hidden>
+            <div class="faucet-panel-top">
+              <span class="faucet-panel-title">Fund address with 20 test GEN:</span>
+              <button type="button" class="faucet-close-link" id="btn-close-faucet" title="Hide">Close &times;</button>
+            </div>
+            <div class="faucet-helpers-row">
+              <button type="button" class="faucet-helper-btn" id="btn-load-my-wallet">📋 Load connected wallet</button>
+              <button type="button" class="faucet-helper-btn" id="btn-clear-wallet">Clear</button>
+            </div>
+            <div class="faucet-action-row">
+              <input type="text" id="faucet-custom-addr" placeholder="0x... (paste wallet address)" spellcheck="false" class="faucet-input">
+              <div class="action-status-wrap">
+                <button type="button" class="faucet-action-btn" id="faucet-custom-btn">Request 20 GEN</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

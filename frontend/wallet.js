@@ -66,6 +66,82 @@ export function shorten(addr) {
   return addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : '-';
 }
 
+// --- EIP-55 Checksum Address Implementation ---
+function keccak256(data) {
+  if (typeof data === 'string') data = new TextEncoder().encode(data);
+  const state = new BigUint64Array(25);
+  const RC = [
+    0x0000000000000001n, 0x0000000000008082n, 0x800000000000808an, 0x8000000080008000n,
+    0x000000000000808bn, 0x0000000080000001n, 0x8000000080008081n, 0x8000000000008009n,
+    0x000000000000008an, 0x0000000000000088n, 0x0000000080008009n, 0x000000008000000an,
+    0x000000008000808bn, 0x800000000000008bn, 0x8000000000008089n, 0x8000000000008003n,
+    0x8000000000008002n, 0x8000000000000080n, 0x000000000000800an, 0x800000008000000an,
+    0x8000000080008081n, 0x8000000000008080n, 0x0000000080000001n, 0x8000000080008008n
+  ];
+  const ROTS = [
+    0, 1, 62, 28, 27, 36, 44, 6, 55, 20, 3, 10, 43, 25, 39, 41, 45, 15, 21, 8, 18, 2, 61, 56, 14
+  ];
+  const rate = 136;
+  const padLen = rate - (data.length % rate);
+  const padded = new Uint8Array(data.length + padLen);
+  padded.set(data);
+  padded[data.length] = 0x01;
+  padded[padded.length - 1] |= 0x80;
+
+  for (let offset = 0; offset < padded.length; offset += rate) {
+    for (let i = 0; i < rate / 8; i++) {
+      let word = 0n;
+      for (let b = 0; b < 8; b++) word |= BigInt(padded[offset + i * 8 + b]) << BigInt(b * 8);
+      state[i] ^= word;
+    }
+    for (let round = 0; round < 24; round++) {
+      const C = new BigUint64Array(5);
+      for (let x = 0; x < 5; x++) C[x] = state[x] ^ state[x + 5] ^ state[x + 10] ^ state[x + 15] ^ state[x + 20];
+      const D = new BigUint64Array(5);
+      for (let x = 0; x < 5; x++) {
+        const left = C[(x + 1) % 5];
+        D[x] = C[(x + 4) % 5] ^ ((left << 1n) | (left >> 63n));
+      }
+      for (let i = 0; i < 25; i++) state[i] ^= D[i % 5];
+      const B = new BigUint64Array(25);
+      for (let x = 0; x < 5; x++) {
+        for (let y = 0; y < 5; y++) {
+          const idx = x + 5 * y;
+          const r = BigInt(ROTS[idx]);
+          const w = state[idx];
+          B[y + 5 * ((2 * x + 3 * y) % 5)] = (w << r) | (w >> (64n - r));
+        }
+      }
+      for (let x = 0; x < 5; x++) {
+        for (let y = 0; y < 5; y++) {
+          const idx = x + 5 * y;
+          state[idx] = B[idx] ^ ((~B[((x + 1) % 5) + 5 * y]) & B[((x + 2) % 5) + 5 * y]);
+        }
+      }
+      state[0] ^= RC[round];
+    }
+  }
+
+  let hex = '';
+  for (let i = 0; i < 4; i++) {
+    let w = state[i];
+    for (let b = 0; b < 8; b++) hex += (Number((w >> BigInt(b * 8)) & 0xffn)).toString(16).padStart(2, '0');
+  }
+  return hex;
+}
+
+export function toChecksumAddress(address) {
+  if (!address || typeof address !== 'string') return address;
+  const clean = address.trim().toLowerCase().replace(/^0x/, '');
+  if (clean.length !== 40) return address;
+  const hash = keccak256(clean);
+  let ret = '0x';
+  for (let i = 0; i < clean.length; i++) {
+    ret += parseInt(hash[i], 16) >= 8 ? clean[i].toUpperCase() : clean[i];
+  }
+  return ret;
+}
+
 export function escapeHtml(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) => (
     { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
