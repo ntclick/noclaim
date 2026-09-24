@@ -716,28 +716,26 @@ async function main() {
   };
 
   const stepGenBtn = $('step-gen-btn');
-  const faucetPanel = $('faucet-panel');
-  if (stepGenBtn) {
-    stepGenBtn.onclick = () => {
-      if (faucetPanel) {
-        const willShow = faucetPanel.hidden;
-        faucetPanel.hidden = !willShow;
-        if (willShow) {
-          if (signer.address && $('faucet-custom-addr') && !$('faucet-custom-addr').value) {
-            $('faucet-custom-addr').value = signer.address;
-          }
-          $('faucet-custom-addr')?.focus();
-        }
-      }
-    };
-  }
+  const closedView = $('faucet-closed-view');
+  const openView = $('faucet-open-view');
 
+  const openFaucet = () => {
+    if (closedView) closedView.hidden = true;
+    if (openView) openView.hidden = false;
+    if (signer.address && $('faucet-custom-addr') && !$('faucet-custom-addr').value) {
+      $('faucet-custom-addr').value = signer.address;
+    }
+    $('faucet-custom-addr')?.focus();
+  };
+
+  const closeFaucet = () => {
+    if (openView) openView.hidden = true;
+    if (closedView) closedView.hidden = false;
+  };
+
+  if (stepGenBtn) stepGenBtn.onclick = openFaucet;
   const btnCloseFaucet = $('btn-close-faucet');
-  if (btnCloseFaucet) {
-    btnCloseFaucet.onclick = () => {
-      if (faucetPanel) faucetPanel.hidden = true;
-    };
-  }
+  if (btnCloseFaucet) btnCloseFaucet.onclick = closeFaucet;
 
   const btnLoadWallet = $('btn-load-my-wallet');
   if (btnLoadWallet) {
@@ -747,16 +745,6 @@ async function main() {
         toast('Loaded your connected wallet address', 'info');
       } else {
         toast('Please connect your wallet first', 'error');
-      }
-    };
-  }
-
-  const btnClearWallet = $('btn-clear-wallet');
-  if (btnClearWallet) {
-    btnClearWallet.onclick = () => {
-      if ($('faucet-custom-addr')) {
-        $('faucet-custom-addr').value = '';
-        $('faucet-custom-addr').focus();
       }
     };
   }
@@ -772,15 +760,8 @@ async function main() {
   const netbarFaucet = $('netbar-faucet-btn');
   if (netbarFaucet) {
     netbarFaucet.onclick = () => {
-      if (faucetPanel) {
-        faucetPanel.hidden = false;
-        if (signer.address && $('faucet-custom-addr') && !$('faucet-custom-addr').value) {
-          $('faucet-custom-addr').value = signer.address;
-        }
-        $('step-gen')?.scrollIntoView({ behavior: 'smooth' });
-      } else {
-        getTestGen({}, netbarFaucet);
-      }
+      openFaucet();
+      $('step-gen')?.scrollIntoView({ behavior: 'smooth' });
     };
   }
   $('step-buy-btn').onclick = () => { showTab('buy'); $('panel-buy').scrollIntoView({ behavior: 'smooth' }); };

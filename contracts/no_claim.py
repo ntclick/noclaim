@@ -165,7 +165,7 @@ def _validate_source_url(url: str) -> None:
             pass  # not a numeric IP -- treat as hostname, fine
 
 
-class NoClaim(gl.contract.Contract):
+class NoClaim(gl.Contract):
     """
     NoClaim -- parametric cover, settled by AI-validator consensus.
 

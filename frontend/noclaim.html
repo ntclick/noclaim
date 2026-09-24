@@ -90,23 +90,28 @@
       <div>
         <h3>Get test GEN</h3>
         <p>Studio Next is a test network. The GEN is free and worth nothing for gas fees.</p>
-        <div class="faucet-box">
-          <div class="faucet-single-btn-wrap" id="faucet-single-btn-wrap">
+        
+        <div class="faucet-card" id="faucet-card">
+          <!-- State A: Initial closed view with single button -->
+          <div id="faucet-closed-view" class="faucet-closed-view">
             <button type="button" class="faucet-main-btn" id="step-gen-btn">
               <span>🚰 Faucet 20 GEN</span>
             </button>
           </div>
-          <div class="faucet-panel" id="faucet-panel" hidden>
-            <div class="faucet-panel-top">
-              <span class="faucet-panel-title">Fund address with 20 test GEN:</span>
-              <button type="button" class="faucet-close-link" id="btn-close-faucet" title="Hide">Close &times;</button>
+
+          <!-- State B: Expanded interactive view (replaces button when opened) -->
+          <div id="faucet-open-view" class="faucet-open-view" hidden>
+            <div class="faucet-form-head">
+              <span class="faucet-form-title">Send 20 test GEN to address:</span>
+              <button type="button" class="faucet-close-x" id="btn-close-faucet" title="Close" aria-label="Close">&times;</button>
             </div>
-            <div class="faucet-helpers-row">
-              <button type="button" class="faucet-helper-btn" id="btn-load-my-wallet">📋 Load connected wallet</button>
-              <button type="button" class="faucet-helper-btn" id="btn-clear-wallet">Clear</button>
+            <div class="faucet-input-box">
+              <input type="text" id="faucet-custom-addr" placeholder="0x... (paste EVM wallet address)" spellcheck="false" class="faucet-address-input">
             </div>
-            <div class="faucet-action-row">
-              <input type="text" id="faucet-custom-addr" placeholder="0x... (paste wallet address)" spellcheck="false" class="faucet-input">
+            <div class="faucet-form-foot">
+              <button type="button" class="faucet-pill-btn" id="btn-load-my-wallet" title="Load your connected wallet address">
+                <span>📋 Use connected wallet</span>
+              </button>
               <div class="action-status-wrap">
                 <button type="button" class="faucet-action-btn" id="faucet-custom-btn">Request 20 GEN</button>
               </div>

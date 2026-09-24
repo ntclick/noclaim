@@ -1368,44 +1368,31 @@ body.desk .hero .hero-lede {
 .steps-live p { margin: 0 0 9px; font-size: 12.5px; color: var(--muted); line-height: 1.5; }
 .steps-live button { margin: 0; }
 .steps-live #step-connect.done button { display: none; }
-.steps-live #step-gen { min-width: 320px; }
-.steps-live #step-gen.done { background: var(--surface) !important; }
-.steps-live #step-gen.done h3,
-.steps-live #step-gen.done p { opacity: 1 !important; }
-.steps-live #step-gen h3 { font-size: 16px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
-
 .steps-live #step-gen button { display: inline-block !important; }
 .steps-live #step-gen .action-status-wrap { display: inline-flex !important; }
-.steps-live #step-gen .faucet-box { display: flex !important; }
+.steps-live #step-gen .faucet-card { display: block !important; }
 
-@media (min-width: 900px) {
+@media (min-width: 860px) {
   .steps-live {
-    grid-template-columns: minmax(200px, 1fr) minmax(360px, 1.8fr) minmax(220px, 1.1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
-.faucet-box {
-  background: var(--sunk);
-  border: 1.5px solid var(--line-strong);
-  border-radius: var(--radius);
-  padding: 16px 18px;
+.faucet-card {
   margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  width: 100%;
 }
 
-.faucet-single-btn-wrap {
+.faucet-closed-view {
   display: flex;
   align-items: center;
-  gap: 12px;
 }
 
 .faucet-main-btn {
   font-family: var(--body);
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
-  padding: 10px 22px;
+  padding: 8px 18px;
   border-radius: 6px;
   background: var(--accent);
   color: #ffffff !important;
@@ -1415,7 +1402,7 @@ body.desk .hero .hero-lede {
   transition: all 0.15s ease;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
 }
 
 .faucet-main-btn:hover {
@@ -1423,119 +1410,120 @@ body.desk .hero .hero-lede {
   box-shadow: 0 4px 10px rgba(41, 82, 126, 0.35);
 }
 
-.faucet-panel {
+.faucet-open-view {
   background: var(--surface);
-  border: 1px solid var(--line-strong);
+  border: 1.5px solid var(--line-strong);
   border-radius: 8px;
-  padding: 12px 14px;
-  margin-top: 6px;
+  padding: 11px 13px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  animation: fadeIn 0.2s ease-out;
+  gap: 8px;
+  animation: fadeIn 0.18s ease-out;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
 }
 
-.faucet-panel[hidden] {
+.faucet-open-view[hidden] {
   display: none !important;
 }
 
-.faucet-panel-top {
+.faucet-form-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
 }
 
-.faucet-panel-title {
-  font-size: 12.5px;
+.faucet-form-title {
+  font-size: 12px;
   font-weight: 600;
   color: var(--ink-soft);
 }
 
-.faucet-close-link {
+.faucet-close-x {
   background: transparent;
   border: none;
-  font-size: 12px;
+  font-size: 16px;
+  line-height: 1;
   color: var(--muted);
   cursor: pointer;
-  padding: 2px 6px;
+  padding: 0 4px;
+  margin: -2px -2px 0 0;
   border-radius: 4px;
 }
 
-.faucet-close-link:hover {
+.faucet-close-x:hover {
   color: var(--ink);
   background: var(--sunk);
 }
 
-.faucet-helpers-row {
+.faucet-input-box {
+  width: 100%;
+}
+
+.faucet-address-input {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  padding: 7px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--ground);
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+.faucet-address-input:focus {
+  border-color: var(--accent);
+  background: var(--surface);
+  box-shadow: 0 0 0 2px rgba(41, 82, 126, 0.15);
+}
+
+.faucet-form-foot {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
   flex-wrap: wrap;
 }
 
-.faucet-helper-btn {
+.faucet-pill-btn {
   font-family: var(--mono);
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 500;
-  padding: 4px 10px;
+  padding: 5px 9px;
   border-radius: 4px;
   background: var(--ground);
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--line);
   color: var(--ink-soft);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
 }
 
-.faucet-helper-btn:hover {
+.faucet-pill-btn:hover {
   background: var(--surface);
   border-color: var(--accent);
   color: var(--accent);
 }
 
-.faucet-action-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  flex-wrap: wrap;
-}
-
-.faucet-input {
-  font-family: var(--mono);
-  font-size: 12.5px;
-  padding: 9px 12px;
-  flex: 1;
-  min-width: 240px;
-  border: 1.5px solid var(--line-strong);
-  border-radius: 6px;
-  background: var(--surface);
-  color: var(--ink);
-  outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.faucet-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(41, 82, 126, 0.15);
-}
-
 .faucet-action-btn {
   font-family: var(--body);
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
-  padding: 9px 18px;
+  padding: 6px 15px;
   border-radius: 6px;
-  background: var(--ink);
-  color: var(--ground) !important;
-  border: 1px solid var(--ink);
+  background: var(--accent);
+  color: #ffffff !important;
+  border: 1px solid var(--accent);
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
 }
 
 .faucet-action-btn:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.15);
+  box-shadow: 0 2px 6px rgba(41, 82, 126, 0.25);
 }
 
 .step-actions { display: flex; gap: 7px; flex-wrap: wrap; }
